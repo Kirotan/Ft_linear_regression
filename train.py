@@ -1,8 +1,10 @@
 import csv
 import sys
 
+
 def estimate_price(mileage, theta0, theta1):
     return theta0 + (theta1 * mileage)
+
 
 def load_data(filename):
     mileage = []
@@ -44,6 +46,7 @@ def normalize(data):
 
     return normalized_data, min_val, max_val
 
+
 def train_model(km_list, price_list):
     theta0 = 0.0
     theta1 = 0.0
@@ -79,49 +82,35 @@ def train_model(km_list, price_list):
     return theta0, theta1
 
 
+def save_model(theta0, theta1, km_min, km_max, price_min, price_max, filename="thetas.csv"):
+    with open(filename, 'w') as file:
+        file.write(f"{theta0},{theta1},{km_min},{km_max},{price_min},{price_max}")
+    print(f"Fichier {filename} créé avec succès !")
 
 
 
 # --- TEST DU CODE ---
 if __name__ == "__main__":
-    # On appelle la fonction
-    km, price = load_data("data.csv")
-    
-    # On affiche juste pour vérifier que ça marche
-    print("--- Vérification chargement des donnees ---")
-    print("Données chargées !")
-    print(f"Nombre de voitures : {len(km)}")
-    print(f"Premier kilométrage : {km[0]}")
-    print(f"Premier prix : {price[0]}")
+    try:
+        # 1. On charge les données
+        print("Chargement des données...")
+        km, price = load_data("data.csv")
+        
+        # 2. On normalise (C'est CRUCIAL car c'est là que km_min et km_max sont créés)
+        print("Normalisation...")
+        km_norm, km_min, km_max = normalize(km)
+        price_norm, price_min, price_max = normalize(price)
 
-    # On normalise les deux listes
-    # On récupère les 3 valeurs renvoyées dans 3 variables distinctes
-    km_norm, km_min, km_max = normalize(km)
-    price_norm, price_min, price_max = normalize(price)
+        # 3. On entraîne le modèle (C'est là que les thétas sont calculés)
+        print("Entraînement du modèle...")
+        theta0_norm, theta1_norm = train_model(km_norm, price_norm)
 
+        print(f"--- RÉSULTATS ---")
+        print(f"Theta0: {theta0_norm}")
+        print(f"Theta1: {theta1_norm}")
 
-    print("--- Vérification nornalisation ---")
-    print(f"Km Min: {km_min}, Km Max: {km_max}")
-    print(f"Price Min: {price_min}, Price Max: {price_max}")
-    print(f"Premier km normalisé : {km_norm[0]}")
-    print(f"Max KM normalisé : {max(km_norm)}") # Doit être égal à 1.0
-    print(f"Min KM normalisé : {min(km_norm)}") # Doit être égal à 0.0
+        # 4. On sauvegarde ENFIN (maintenant que les variables existent)
+        save_model(theta0_norm, theta1_norm, km_min, km_max, price_min, price_max)
 
-
-    print("--- Vérification de l'entrainement ---")
-    # 1. Chargement
-    print("Chargement des données...")
-    km, price = load_data("data.csv")
-    
-    # 2. Normalisation
-    print("Normalisation...")
-    km_norm, km_min, km_max = normalize(km)
-    price_norm, price_min, price_max = normalize(price)
-
-    # 3. Entraînement
-    print("Entraînement en cours...")
-    theta0_norm, theta1_norm = train_model(km_norm, price_norm)
-
-    print("\n--- RÉSULTATS ---")
-    print(f"Theta0 final (normalisé) : {theta0_norm}")
-    print(f"Theta1 final (normalisé) : {theta1_norm}")
+    except Exception as e:
+        print(f"Une erreur inattendue est survenue : {e}")
